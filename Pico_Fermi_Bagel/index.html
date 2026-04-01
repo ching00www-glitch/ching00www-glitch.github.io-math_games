@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PFB 數字偵探遊戲</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #67b26f;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --grey: #95a5a6;
+            --bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .game-card {
+            background: white;
+            width: 90%;
+            max-width: 450px;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        .lang-bar { text-align: right; margin-bottom: 10px; }
+        .btn-link { 
+            background: none; border: none; color: var(--primary); 
+            cursor: pointer; text-decoration: underline; font-size: 0.9rem;
+        }
+
+        h1 { color: var(--primary); margin: 10px 0; font-size: 1.8rem; }
+        .stats { font-weight: bold; color: var(--grey); margin-bottom: 15px; }
+
+        .rules-box {
+            background: #f0f7ff;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            text-align: left;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            font-size: 1.3rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            letter-spacing: 8px;
+            font-weight: bold;
+        }
+
+        input:focus { border-color: var(--primary); outline: none; }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-guess { background: var(--primary); color: white; }
+        .btn-guess:hover { background: #357abd; }
+
+        .history-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border-top: 2px solid #eee;
+            padding-top: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 5px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tag-group { display: flex; gap: 4px; }
+        .tag {
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            color: white;
+            font-weight: bold;
+        }
+        .tag-f { background: var(--success); }
+        .tag-p { background: var(--warning); color: #333; }
+        .tag-b { background: var(--grey); }
+
+        /* 彈窗設計 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            z-index: 99;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            z-index: 100;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .footer-btns {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-card">
+    <div class="lang-bar">
+        <button class="btn-link" onclick="setLang('zh')">中文</button> | 
+        <button class="btn-link" onclick="setLang('en')">EN</button>
+    </div>
+
+    <h1 id="ui-title">數字偵探 PFB</h1>
+    <div class="stats"><span id="ui-attempts">步數</span>: <span id="count">0</span></div>
+
+    <div class="rules-box" id="ui-rules">
+        🎯 <b>Fermi</b>: 數字對、位置對<br>
+        💡 <b>Pico</b>: 數字對、位置錯<br>
+        🥯 <b>Bagels</b>: 全錯
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="guessInput" maxlength="3" placeholder="???" autocomplete="off">
+        <button class="btn-guess" onclick="makeGuess()" id="ui-btn-guess">猜題</button>
+    </div>
+
+    <div class="history-container" id="history">
+        </div>
+
+    <div class="footer-btns">
+        <button onclick="confirmReset()" style="background:#eee;" id="ui-btn-reset">重新開始</button>
+        <button onclick="giveUp()" style="background:none; color:var(--danger); border:1px solid var(--danger);" id="ui-btn-giveup">放棄</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="overlay"></div>
+<div class="modal" id="modal">
+    <h2 id="modal-title">太棒了！</h2>
+    <p id="modal-content"></p>
+    <button class="btn-guess" onclick="initGame()" style="width:100%">再挑戰一次</button>
+</div>
+
+<script>
+    let secret = [];
+    let attempts = 0;
+    let currentLang = 'zh';
+
+    const langData = {
+        zh: {
+            title: "數字偵探 PFB",
+            attempts: "猜題次數",
+            rules: "🎯 <b>Fermi</b>: 數字對、位置對<br>💡 <b>Pico</b>: 數字對、位置錯<br>🥯 <b>Bagels</b>: 全錯",
+            btnGuess: "猜題",
+            btnReset: "重玩",
+            btnGiveUp: "看答案",
+            error: "請輸入 3 個不重複的數字！",
+            winTitle: "成功解碼！",
+            winMsg: "你一共花了 {n} 步。正確答案是：",
+            giveUpMsg: "別灰心，正確答案是：",
+            confirmReset: "確定要重新開始嗎？"
+        },
+        en: {
+            title: "PFB Detective",
+            attempts: "Guesses",
+            rules: "🎯 <b>Fermi</b>: Correct digit & spot<br>💡 <b>Pico</b>: Correct digit, wrong spot<br>🥯 <b>Bagels</b>: All wrong",
+            btnGuess: "Guess",
+            btnReset: "Reset",
+            btnGiveUp: "Reveal",
+            error: "Enter 3 unique digits!",
+            winTitle: "Mission Success!",
+            winMsg: "You solved it in {n} steps. The answer was: ",
+            giveUpMsg: "The secret code was: ",
+            confirmReset: "Are you sure to reset?"
+        }
+    };
+
+    function setLang(l) {
+        currentLang = l;
+        const d = langData[l];
+        document.getElementById('ui-title').innerText = d.title;
+        document.getElementById('ui-attempts').innerText = d.attempts;
+        document.getElementById('ui-rules').innerHTML = d.rules;
+        document.getElementById('ui-btn-guess').innerText = d.btnGuess;
+        document.getElementById('ui-btn-reset').innerText = d.btnReset;
+        document.getElementById('ui-btn-giveup').innerText = d.btnGiveUp;
+    }
+
+    function initGame() {
+        let digits = [0,1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+        secret = digits.slice(0, 3);
+        attempts = 0;
+        document.getElementById('count').innerText = "0";
+        document.getElementById('history').innerHTML = "";
+        document.getElementById('guessInput').value = "";
+        document.getElementById('modal').style.display = "none";
+        document.getElementById('overlay').style.display = "none";
+        document.getElementById('guessInput').focus();
+    }
+
+    function makeGuess() {
+        const val = document.getElementById('guessInput').value;
+        if (val.length !== 3 || new Set(val).size !== 3 || isNaN(val)) {
+            alert(langData[currentLang].error);
+            return;
+        }
+
+        attempts++;
+        document.getElementById('count').innerText = attempts;
+        
+        const guess = val.split('').map(Number);
+        let f = 0, p = 0;
+
+        guess.forEach((num, i) => {
+            if (num === secret[i]) f++;
+            else if (secret.includes(num)) p++;
+        });
+
+        updateHistory(val, f, p);
+        document.getElementById('guessInput').value = "";
+        document.getElementById('guessInput').focus();
+
+        if (f === 3) showEnd(langData[currentLang].winTitle, langData[currentLang].winMsg.replace('{n}', attempts));
+    }
+
+    function updateHistory(guess, f, p) {
+        const container = document.getElementById('history');
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        
+        let tags = "";
+        if (f === 0 && p === 0) tags = '<span class="tag tag-b">Bagels</span>';
+        else {
+            for(let i=0; i<f; i++) tags += '<span class="tag tag-f">Fermi</span>';
+            for(let i=0; i<p; i++) tags += '<span class="tag tag-p">Pico</span>';
+        }
+
+        div.innerHTML = `<strong>#${attempts} : ${guess}</strong> <div class="tag-group">${tags}</div>`;
+        container.prepend(div);
+    }
+
+    function showEnd(title, msg) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-content').innerText = msg + secret.join('');
+        document.getElementById('modal').style.display = "block";
+        document.getElementById('overlay').style.display = "block";
+    }
+
+    function giveUp() {
+        showEnd("Game Over", langData[currentLang].giveUpMsg);
+    }
+
+    function confirmReset() {
+        if(confirm(langData[currentLang].confirmReset)) initGame();
+    }
+
+    // Enter 鍵支援
+    document.getElementById('guessInput').addEventListener('keyup', (e) => {
+        if(e.key === 'Enter') makeGuess();
+    });
+
+    initGame();
+    setLang('zh');
+</script>
+
+</body>
+</html>
