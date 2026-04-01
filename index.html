@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>終極數字解碼器 - PFB Detective</title>
+    <title>顏色解碼大挑戰 - 數字偵探遊戲</title>
     <style>
         :root {
-            --primary: #4a90e2; /* 偵探藍 */
-            --accent: #ffcc00;  /* 能量黃 */
-            --success: #2ecc71; /* 達成綠 */
-            --danger: #e74c3c;  /* 警示紅 */
-            --bg: #eef2f7;
+            --primary: #4a90e2; 
+            --accent: #ffcc00;  
+            --success: #2ecc71; /* 綠色 */
+            --warning: #f1c40f; /* 黃色 */
+            --danger: #e74c3c;  /* 紅色 */
+            --bg: #f4f7f9;
         }
 
         body {
@@ -23,266 +24,287 @@
             min-height: 100vh;
         }
 
-        /* 放大版主卡片 */
+        /* 超大主卡片 */
         .game-container {
             background: white;
             width: 95%;
             max-width: 600px;
             padding: 40px;
             border-radius: 40px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
             text-align: center;
             border: 8px solid var(--primary);
-            position: relative;
         }
 
-        h1 { font-size: 3rem; color: var(--primary); margin: 10px 0; }
-        .stats-bar { font-size: 1.5rem; color: #555; margin-bottom: 20px; display: flex; justify-content: space-around; }
+        h1 { font-size: 3.2rem; color: var(--primary); margin: 0 0 20px 0; }
+        
+        .stats-bar { 
+            font-size: 1.6rem; 
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 25px; 
+            display: flex; 
+            justify-content: space-around;
+            font-weight: bold;
+        }
 
         /* 模式切換 */
         .mode-toggle {
-            margin-bottom: 25px;
-            background: #f0f0f0;
-            padding: 10px;
-            border-radius: 20px;
+            margin-bottom: 30px;
+            background: #eee;
+            padding: 8px;
+            border-radius: 25px;
             display: inline-flex;
             gap: 10px;
         }
         .mode-btn {
-            padding: 10px 20px;
-            border-radius: 15px;
+            padding: 12px 25px;
+            border-radius: 20px;
             border: none;
             cursor: pointer;
             font-weight: bold;
             font-size: 1.2rem;
+            transition: 0.3s;
         }
-        .active-mode { background: var(--primary); color: white; }
+        .active-mode { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(74,144,226,0.3); }
 
-        /* 超大輸入框 */
-        .input-row { display: flex; gap: 20px; justify-content: center; margin: 30px 0; }
-        .box {
-            width: 90px; height: 110px;
-            font-size: 4rem;
+        /* 巨型獨立輸入框 */
+        .input-row { display: flex; gap: 20px; justify-content: center; margin: 35px 0; }
+        .digit-box {
+            width: 100px; height: 130px;
+            font-size: 4.5rem;
             text-align: center;
-            border: 5px solid #ddd;
-            border-radius: 20px;
-            background: #fafafa;
+            border: 6px solid #ddd;
+            border-radius: 25px;
+            background: #fff;
             font-weight: bold;
             color: var(--primary);
+            transition: 0.2s;
         }
-        .box:focus { outline: none; border-color: var(--accent); background: white; }
+        .digit-box:focus { outline: none; border-color: var(--accent); background: #fffdf0; transform: scale(1.05); }
 
         button.main-btn {
             width: 100%;
             padding: 25px;
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: bold;
             background: var(--accent);
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             cursor: pointer;
-            box-shadow: 0 8px 0 #d4aa00;
+            box-shadow: 0 10px 0 #d4aa00;
             transition: 0.1s;
         }
-        button.main-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #d4aa00; }
+        button.main-btn:active { transform: translateY(6px); box-shadow: 0 4px 0 #d4aa00; }
 
-        /* 推理紀錄 */
+        /* 推理紀錄紀錄 */
         .history {
-            margin-top: 30px;
+            margin-top: 40px;
             max-height: 400px;
             overflow-y: auto;
             text-align: left;
-            border-top: 4px solid #f0f0f0;
-            padding-top: 20px;
+            border-top: 5px solid #f0f0f0;
+            padding-top: 25px;
         }
         .log-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px; border-bottom: 2px solid #f9f9f9; font-size: 1.8rem;
+            padding: 18px; border-bottom: 2px solid #f5f5f5; font-size: 2rem;
         }
-        .badges { display: flex; gap: 8px; }
-        .badge {
-            padding: 5px 12px; border-radius: 12px; font-size: 1rem; color: white; font-weight: bold;
+        .signal-group { display: flex; gap: 10px; }
+        .signal-dot {
+            width: 35px; height: 35px; border-radius: 50%; display: inline-block;
         }
-        .f { background: var(--success); }
-        .p { background: var(--accent); color: #333; }
-        .b { background: #95a5a6; }
+        .dot-green { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .dot-yellow { background: var(--warning); box-shadow: 0 0 10px var(--warning); }
+        .dot-red { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
 
-        /* 開始/結束 彈窗 */
+        /* 彈窗樣式 */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 100;
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 100;
+            backdrop-filter: blur(5px);
         }
         .modal {
-            background: white; padding: 50px; border-radius: 40px; max-width: 500px; width: 80%; text-align: center;
+            background: white; padding: 50px; border-radius: 40px; max-width: 550px; width: 85%; text-align: center;
+            border: 10px solid var(--primary);
         }
-        .modal h2 { font-size: 2.5rem; color: var(--primary); }
-        .modal p { font-size: 1.3rem; text-align: left; line-height: 1.6; }
+        .modal h2 { font-size: 2.8rem; color: var(--primary); margin-top: 0; }
+        .modal p { font-size: 1.4rem; text-align: left; line-height: 1.8; color: #444; }
+        .rule-item { margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
 
-        #timer { color: var(--danger); font-weight: bold; }
+        #timer { color: var(--danger); }
     </style>
 </head>
 <body>
 
-<div class="overlay" id="startScreen">
+<div class="overlay" id="introScreen">
     <div class="modal">
-        <h2>🕵️ 偵探任務簡報</h2>
+        <h2>🚦 偵探解碼規則</h2>
         <p>
-            目標：猜出電腦隱藏的 3 位數字組合！<br><br>
-            🎯 <b>Fermi</b>：數字對、位置也對。<br>
-            💡 <b>Pico</b>：數字對，但位置放錯了。<br>
-            🥯 <b>Bagels</b>：所有數字都不在答案裡。<br><br>
-            ⚠️ <b>困難模式</b>：數字可能會重複出現（例如 112）。
+            找出電腦隱藏的 3 位數字，根據燈號提示推理：<br><br>
+            <span class="rule-item"><span class="signal-dot dot-green"></span> <b>綠燈</b>：數字對、位置也對</span>
+            <span class="rule-item"><span class="signal-dot dot-yellow"></span> <b>黃燈</b>：數字對了，但位置放錯</span>
+            <span class="rule-item"><span class="signal-dot dot-red"></span> <b>紅燈</b>：完全沒猜中數字</span><br>
+            ⚠️ <b>困難模式</b>：數字會重複（例如 881）
         </p>
-        <button class="main-btn" onclick="startGame()">開始任務！</button>
+        <button class="main-btn" onclick="startApp()">我準備好了！</button>
     </div>
 </div>
 
 <div class="game-container">
-    <h1>數字解碼器</h1>
+    <h1>解碼偵探</h1>
     
     <div class="stats-bar">
-        <span>回合：<span id="turnCount">0</span></span>
+        <span>回合：<span id="turns">0</span></span>
         <span>時間：<span id="timer">00:00</span></span>
     </div>
 
     <div class="mode-toggle">
-        <button class="mode-btn active-mode" id="normalBtn" onclick="changeMode('normal')">普通 (不重複)</button>
-        <button class="mode-btn" id="hardBtn" onclick="changeMode('hard')">困難 (可重複)</button>
+        <button class="mode-btn active-mode" id="mNormal" onclick="setMode('normal')">普通模式</button>
+        <button class="mode-btn" id="mHard" onclick="setMode('hard')">困難模式 (重複)</button>
     </div>
 
     <div class="input-row">
-        <input type="text" class="box" id="b1" maxlength="1" inputmode="numeric">
-        <input type="text" class="box" id="b2" maxlength="1" inputmode="numeric">
-        <input type="text" class="box" id="b3" maxlength="1" inputmode="numeric">
+        <input type="text" class="digit-box" id="d1" maxlength="1" inputmode="numeric">
+        <input type="text" class="digit-box" id="d2" maxlength="1" inputmode="numeric">
+        <input type="text" class="digit-box" id="d3" maxlength="1" inputmode="numeric">
     </div>
 
-    <button class="main-btn" onclick="submitGuess()">立即解碼</button>
+    <button class="main-btn" onclick="checkAnswer()">比對訊號</button>
 
-    <div class="history" id="historyLog"></div>
+    <div class="history" id="log"></div>
 </div>
 
 <div class="overlay" id="winScreen" style="display:none;">
     <div class="modal">
-        <h2 style="color:var(--success)">🎯 任務完成！</h2>
-        <p id="resultText" style="text-align:center; font-size:1.5rem;"></p>
-        <h1 id="finalAns" style="letter-spacing:15px;">000</h1>
-        <button class="main-btn" onclick="location.reload()">再玩一次</button>
+        <h2 style="color:var(--success)">🎉 解碼成功！</h2>
+        <p id="statsSummary" style="text-align:center; font-size:1.6rem; margin:20px 0;"></p>
+        <div style="font-size: 4rem; letter-spacing: 20px; font-weight: bold; color: var(--primary);" id="reveal">000</div>
+        <button class="main-btn" onclick="location.reload()" style="margin-top:30px;">再玩一次</button>
     </div>
 </div>
 
 <script>
     let secret = [];
-    let turns = 0;
-    let mode = 'normal';
-    let startTime;
-    let timerInterval;
-    const boxes = [document.getElementById('b1'), document.getElementById('b2'), document.getElementById('b3')];
+    let turnCount = 0;
+    let gameMode = 'normal';
+    let timeStart;
+    let timerTick;
+    const inputs = [document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
 
-    // 自動跳格與退格
-    boxes.forEach((box, i) => {
-        box.oninput = () => { if(box.value && i<2) boxes[i+1].focus(); };
+    // 輸入框邏輯：自動跳格
+    inputs.forEach((box, i) => {
+        box.oninput = () => { if(box.value && i < 2) inputs[i+1].focus(); };
         box.onkeydown = (e) => {
-            if(e.key === 'Backspace' && !box.value && i>0) boxes[i-1].focus();
-            if(e.key === 'Enter') submitGuess();
+            if(e.key === 'Backspace' && !box.value && i > 0) inputs[i-1].focus();
+            if(e.key === 'Enter') checkAnswer();
         };
     });
 
-    function startGame() {
-        document.getElementById('startScreen').style.display = 'none';
-        initGame();
+    function startApp() {
+        document.getElementById('introScreen').style.display = 'none';
+        newGame();
     }
 
-    function changeMode(m) {
-        mode = m;
-        document.getElementById('normalBtn').className = m === 'normal' ? 'mode-btn active-mode' : 'mode-btn';
-        document.getElementById('hardBtn').className = m === 'hard' ? 'mode-btn active-mode' : 'mode-btn';
-        initGame();
+    function setMode(m) {
+        gameMode = m;
+        document.getElementById('mNormal').className = m === 'normal' ? 'mode-btn active-mode' : 'mode-btn';
+        document.getElementById('mHard').className = m === 'hard' ? 'mode-btn active-mode' : 'mode-btn';
+        newGame();
     }
 
-    function initGame() {
-        if (mode === 'normal') {
-            let nums = [0,1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-            secret = nums.slice(0, 3);
+    function newGame() {
+        if (gameMode === 'normal') {
+            let pool = [0,1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+            secret = pool.slice(0, 3);
         } else {
             secret = [0,0,0].map(() => Math.floor(Math.random() * 10));
         }
         
-        turns = 0;
-        document.getElementById('turnCount').innerText = "0";
-        document.getElementById('historyLog').innerHTML = "";
-        clearInterval(timerInterval);
-        startTimer();
-        boxes.forEach(b => b.value = "");
-        boxes[0].focus();
+        turnCount = 0;
+        document.getElementById('turns').innerText = "0";
+        document.getElementById('log').innerHTML = "";
+        clearInterval(timerTick);
+        runTimer();
+        inputs.forEach(b => b.value = "");
+        inputs[0].focus();
     }
 
-    function startTimer() {
-        startTime = Date.now();
-        timerInterval = setInterval(() => {
-            let elapsed = Math.floor((Date.now() - startTime) / 1000);
-            let m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            let s = (elapsed % 60).toString().padStart(2, '0');
+    function runTimer() {
+        timeStart = Date.now();
+        timerTick = setInterval(() => {
+            let sec = Math.floor((Date.now() - timeStart) / 1000);
+            let m = Math.floor(sec / 60).toString().padStart(2, '0');
+            let s = (sec % 60).toString().padStart(2, '0');
             document.getElementById('timer').innerText = `${m}:${s}`;
         }, 1000);
     }
 
-    function submitGuess() {
-        const guess = boxes.map(b => b.value).join('');
-        if (guess.length < 3) return;
-        if (mode === 'normal' && new Set(guess).size !== 3) {
-            alert("普通模式數字不能重複！"); return;
+    function checkAnswer() {
+        const guessStr = inputs.map(b => b.value).join('');
+        if (guessStr.length < 3) return;
+        
+        if (gameMode === 'normal' && new Set(guessStr).size !== 3) {
+            alert("普通模式中，數字不能重複喔！"); return;
         }
 
-        turns++;
-        document.getElementById('turnCount').innerText = turns;
+        turnCount++;
+        document.getElementById('turns').innerText = turnCount;
         
-        let f = 0, p = 0;
-        let sCopy = [...secret];
-        let gCopy = guess.split('').map(Number);
+        let green = 0, yellow = 0;
+        let sCheck = [...secret];
+        let gCheck = guessStr.split('').map(Number);
 
-        // 先算 Fermi
-        gCopy.forEach((num, i) => {
-            if (num === sCopy[i]) {
-                f++; sCopy[i] = null; gCopy[i] = "used";
+        // 1. 先找綠燈 (位置與數字皆對)
+        gCheck.forEach((num, i) => {
+            if (num === sCheck[i]) {
+                green++; sCheck[i] = null; gCheck[i] = "X";
             }
         });
 
-        // 再算 Pico (考慮重複數字)
-        gCopy.forEach((num, i) => {
-            if (num !== "used") {
-                let sIndex = sCopy.indexOf(num);
-                if (sIndex > -1) {
-                    p++; sCopy[sIndex] = null;
+        // 2. 再找黃燈 (數字對但位置錯)
+        gCheck.forEach((num, i) => {
+            if (num !== "X") {
+                let foundIdx = sCheck.indexOf(num);
+                if (foundIdx > -1) {
+                    yellow++; sCheck[foundIdx] = null;
                 }
             }
         });
 
-        updateHistory(guess, f, p);
-        boxes.forEach(b => b.value = "");
-        boxes[0].focus();
+        drawLog(guessStr, green, yellow);
+        inputs.forEach(b => b.value = "");
+        inputs[0].focus();
 
-        if (f === 3) winGame();
+        if (green === 3) endGame();
     }
 
-    function updateHistory(guess, f, p) {
-        let log = document.getElementById('historyLog');
+    function drawLog(guess, g, y) {
+        let list = document.getElementById('log');
         let div = document.createElement('div');
         div.className = 'log-item';
-        let badges = "";
-        if (f === 0 && p === 0) badges = '<span class="badge b">🥯 Bagels</span>';
-        else {
-            for(let i=0; i<f; i++) badges += '<span class="badge f">🎯 Fermi</span>';
-            for(let i=0; i<p; i++) badges += '<span class="badge p">💡 Pico</span>';
+        let dots = "";
+        
+        if (g === 0 && y === 0) {
+            dots = '<span class="signal-dot dot-red"></span>';
+        } else {
+            for(let i=0; i<g; i++) dots += '<span class="signal-dot dot-green"></span>';
+            for(let i=0; i<y; i++) dots += '<span class="signal-dot dot-yellow"></span>';
         }
-        div.innerHTML = `<strong>${guess}</strong> <div class="badges">${badges}</div>`;
-        log.prepend(div);
+        
+        div.innerHTML = `<strong>${guess}</strong> <div class="signal-group">${dots}</div>`;
+        list.prepend(div);
     }
 
-    function winGame() {
-        clearInterval(timerInterval);
+    function endGame() {
+        clearInterval(timerTick);
         document.getElementById('winScreen').style.display = 'flex';
-        document.getElementById('finalAns').innerText = secret.join('');
-        document.getElementById('resultText').innerHTML = `解碼模式：${mode === 'normal' ? '普通' : '困難'}<br>總共花費：${turns} 回合<br>所用時間：${document.getElementById('timer').innerText}`;
+        document.getElementById('reveal').innerText = secret.join('');
+        document.getElementById('statsSummary').innerHTML = 
+            `難度：${gameMode === 'normal' ? '普通' : '困難'}<br>` +
+            `共用了：${turnCount} 回合<br>` +
+            `總時間：${document.getElementById('timer').innerText}`;
     }
 </script>
 </body>
