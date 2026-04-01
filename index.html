@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>顏色解碼大挑戰 - 數字偵探遊戲</title>
+    <title>數字解碼大挑戰 - 偵探遊戲</title>
     <style>
         :root {
             --primary: #4a90e2; 
             --accent: #ffcc00;  
-            --success: #2ecc71; /* 綠色 */
-            --warning: #f1c40f; /* 黃色 */
-            --danger: #e74c3c;  /* 紅色 */
+            --success: #2ecc71; /* 綠色：全對 */
+            --warning: #f1c40f; /* 黃色：半對 */
+            --danger: #e74c3c;  /* 紅色：全錯 */
             --bg: #f4f7f9;
         }
 
@@ -24,7 +24,7 @@
             min-height: 100vh;
         }
 
-        /* 超大主卡片 */
+        /* 遊戲主卡片 - 再次放大 */
         .game-container {
             background: white;
             width: 95%;
@@ -36,7 +36,7 @@
             border: 8px solid var(--primary);
         }
 
-        h1 { font-size: 3.2rem; color: var(--primary); margin: 0 0 20px 0; }
+        h1 { font-size: 3.5rem; color: var(--primary); margin: 0 0 20px 0; }
         
         .stats-bar { 
             font-size: 1.6rem; 
@@ -49,7 +49,7 @@
             font-weight: bold;
         }
 
-        /* 模式切換 */
+        /* 模式切換按鈕 */
         .mode-toggle {
             margin-bottom: 30px;
             background: #eee;
@@ -84,10 +84,11 @@
         }
         .digit-box:focus { outline: none; border-color: var(--accent); background: #fffdf0; transform: scale(1.05); }
 
+        /* 「解碼」主按鈕 */
         button.main-btn {
             width: 100%;
             padding: 25px;
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             background: var(--accent);
             border: none;
@@ -95,10 +96,11 @@
             cursor: pointer;
             box-shadow: 0 10px 0 #d4aa00;
             transition: 0.1s;
+            color: #333;
         }
         button.main-btn:active { transform: translateY(6px); box-shadow: 0 4px 0 #d4aa00; }
 
-        /* 推理紀錄紀錄 */
+        /* 推理紀錄 */
         .history {
             margin-top: 40px;
             max-height: 400px;
@@ -109,29 +111,29 @@
         }
         .log-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 18px; border-bottom: 2px solid #f5f5f5; font-size: 2rem;
+            padding: 18px; border-bottom: 2px solid #f5f5f5; font-size: 2.2rem;
         }
         .signal-group { display: flex; gap: 10px; }
         .signal-dot {
-            width: 35px; height: 35px; border-radius: 50%; display: inline-block;
+            width: 38px; height: 38px; border-radius: 50%; display: inline-block;
         }
-        .dot-green { background: var(--success); box-shadow: 0 0 10px var(--success); }
-        .dot-yellow { background: var(--warning); box-shadow: 0 0 10px var(--warning); }
-        .dot-red { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        .dot-green { background: var(--success); box-shadow: 0 0 12px var(--success); }
+        .dot-yellow { background: var(--warning); box-shadow: 0 0 12px var(--warning); }
+        .dot-red { background: var(--danger); box-shadow: 0 0 12px var(--danger); }
 
-        /* 彈窗樣式 */
+        /* 規則與結算彈窗 */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 100;
-            backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 100;
+            backdrop-filter: blur(8px);
         }
         .modal {
-            background: white; padding: 50px; border-radius: 40px; max-width: 550px; width: 85%; text-align: center;
+            background: white; padding: 50px; border-radius: 45px; max-width: 550px; width: 85%; text-align: center;
             border: 10px solid var(--primary);
         }
-        .modal h2 { font-size: 2.8rem; color: var(--primary); margin-top: 0; }
-        .modal p { font-size: 1.4rem; text-align: left; line-height: 1.8; color: #444; }
-        .rule-item { margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
+        .modal h2 { font-size: 3rem; color: var(--primary); margin-top: 0; }
+        .modal p { font-size: 1.5rem; text-align: left; line-height: 1.8; color: #444; }
+        .rule-item { margin-bottom: 20px; display: flex; align-items: center; gap: 20px; font-weight: bold; }
 
         #timer { color: var(--danger); }
     </style>
@@ -140,20 +142,20 @@
 
 <div class="overlay" id="introScreen">
     <div class="modal">
-        <h2>🚦 偵探解碼規則</h2>
+        <h2>🕵️ 偵探解碼任務</h2>
         <p>
-            找出電腦隱藏的 3 位數字，根據燈號提示推理：<br><br>
-            <span class="rule-item"><span class="signal-dot dot-green"></span> <b>綠燈</b>：數字對、位置也對</span>
-            <span class="rule-item"><span class="signal-dot dot-yellow"></span> <b>黃燈</b>：數字對了，但位置放錯</span>
-            <span class="rule-item"><span class="signal-dot dot-red"></span> <b>紅燈</b>：完全沒猜中數字</span><br>
-            ⚠️ <b>困難模式</b>：數字會重複（例如 881）
+            請猜出隱藏的 3 位數字組合，觀察燈號提示：<br><br>
+            <span class="rule-item"><span class="signal-dot dot-green"></span> 綠燈：數字對、位置也對</span>
+            <span class="rule-item"><span class="signal-dot dot-yellow"></span> 黃燈：數字對，但位置錯了</span>
+            <span class="rule-item"><span class="signal-dot dot-red"></span> 紅燈：這數字不在密碼裡</span><br>
+            ⚠️ <b>困難模式</b>：數字會重複（例如 551）
         </p>
-        <button class="main-btn" onclick="startApp()">我準備好了！</button>
+        <button class="main-btn" onclick="startApp()">開始解碼！</button>
     </div>
 </div>
 
 <div class="game-container">
-    <h1>解碼偵探</h1>
+    <h1>數字解碼器</h1>
     
     <div class="stats-bar">
         <span>回合：<span id="turns">0</span></span>
@@ -166,22 +168,22 @@
     </div>
 
     <div class="input-row">
-        <input type="text" class="digit-box" id="d1" maxlength="1" inputmode="numeric">
-        <input type="text" class="digit-box" id="d2" maxlength="1" inputmode="numeric">
-        <input type="text" class="digit-box" id="d3" maxlength="1" inputmode="numeric">
+        <input type="text" class="digit-box" id="d1" maxlength="1" inputmode="numeric" onfocus="this.select()">
+        <input type="text" class="digit-box" id="d2" maxlength="1" inputmode="numeric" onfocus="this.select()">
+        <input type="text" class="digit-box" id="d3" maxlength="1" inputmode="numeric" onfocus="this.select()">
     </div>
 
-    <button class="main-btn" onclick="checkAnswer()">比對訊號</button>
+    <button class="main-btn" onclick="checkAnswer()">解碼</button>
 
     <div class="history" id="log"></div>
 </div>
 
 <div class="overlay" id="winScreen" style="display:none;">
     <div class="modal">
-        <h2 style="color:var(--success)">🎉 解碼成功！</h2>
+        <h2 style="color:var(--success)">🏆 成功解碼！</h2>
         <p id="statsSummary" style="text-align:center; font-size:1.6rem; margin:20px 0;"></p>
-        <div style="font-size: 4rem; letter-spacing: 20px; font-weight: bold; color: var(--primary);" id="reveal">000</div>
-        <button class="main-btn" onclick="location.reload()" style="margin-top:30px;">再玩一次</button>
+        <div style="font-size: 5rem; letter-spacing: 20px; font-weight: bold; color: var(--primary); background: #f0f7ff; border-radius: 20px; padding: 10px;" id="reveal">000</div>
+        <button class="main-btn" onclick="location.reload()" style="margin-top:40px;">再玩一次</button>
     </div>
 </div>
 
@@ -193,7 +195,7 @@
     let timerTick;
     const inputs = [document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
 
-    // 輸入框邏輯：自動跳格
+    // 輸入框控制：自動跳格與退格
     inputs.forEach((box, i) => {
         box.oninput = () => { if(box.value && i < 2) inputs[i+1].focus(); };
         box.onkeydown = (e) => {
@@ -246,7 +248,7 @@
         if (guessStr.length < 3) return;
         
         if (gameMode === 'normal' && new Set(guessStr).size !== 3) {
-            alert("普通模式中，數字不能重複喔！"); return;
+            alert("普通模式下，數字不能重複輸入喔！"); return;
         }
 
         turnCount++;
@@ -256,14 +258,14 @@
         let sCheck = [...secret];
         let gCheck = guessStr.split('').map(Number);
 
-        // 1. 先找綠燈 (位置與數字皆對)
+        // 1. 先計算綠燈 (位置與數字皆對)
         gCheck.forEach((num, i) => {
             if (num === sCheck[i]) {
                 green++; sCheck[i] = null; gCheck[i] = "X";
             }
         });
 
-        // 2. 再找黃燈 (數字對但位置錯)
+        // 2. 再計算黃燈 (數字對但位置錯)
         gCheck.forEach((num, i) => {
             if (num !== "X") {
                 let foundIdx = sCheck.indexOf(num);
@@ -302,9 +304,9 @@
         document.getElementById('winScreen').style.display = 'flex';
         document.getElementById('reveal').innerText = secret.join('');
         document.getElementById('statsSummary').innerHTML = 
-            `難度：${gameMode === 'normal' ? '普通' : '困難'}<br>` +
-            `共用了：${turnCount} 回合<br>` +
-            `總時間：${document.getElementById('timer').innerText}`;
+            `解碼模式：${gameMode === 'normal' ? '普通' : '困難'}<br>` +
+            `完成回合：${turnCount} 回合<br>` +
+            `解碼耗時：${document.getElementById('timer').innerText}`;
     }
 </script>
 </body>
