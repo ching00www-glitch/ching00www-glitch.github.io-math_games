@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PFB 數字偵探遊戲</title>
+    <title>PFB 數字偵探 - 數學邏輯遊戲</title>
     <style>
         :root {
             --primary: #4a90e2;
-            --secondary: #67b26f;
             --success: #2ecc71;
             --warning: #f1c40f;
             --danger: #e74c3c;
-            --grey: #95a5a6;
-            --bg: #f8f9fa;
+            --bg: #f5f7fa;
         }
 
         body {
-            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -25,36 +23,41 @@
             margin: 0;
         }
 
-        .game-card {
+        .container {
             background: white;
-            width: 90%;
-            max-width: 450px;
-            padding: 2rem;
+            padding: 30px;
             border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
             text-align: center;
         }
 
-        .lang-bar { text-align: right; margin-bottom: 10px; }
-        .btn-link { 
-            background: none; border: none; color: var(--primary); 
-            cursor: pointer; text-decoration: underline; font-size: 0.9rem;
+        .lang-btn {
+            background: none;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
         }
 
-        h1 { color: var(--primary); margin: 10px 0; font-size: 1.8rem; }
-        .stats { font-weight: bold; color: var(--grey); margin-bottom: 15px; }
+        h1 { color: var(--primary); margin-bottom: 10px; }
+        .counter { font-size: 1.1rem; font-weight: bold; color: #666; margin-bottom: 20px; }
 
-        .rules-box {
-            background: #f0f7ff;
-            padding: 12px;
+        .rules {
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            padding: 10px;
             border-radius: 10px;
             font-size: 0.85rem;
             text-align: left;
             margin-bottom: 20px;
-            line-height: 1.5;
         }
 
-        .input-area {
+        .input-group {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
@@ -63,245 +66,182 @@
         input {
             flex: 1;
             padding: 12px;
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             border: 2px solid #ddd;
             border-radius: 10px;
             text-align: center;
-            letter-spacing: 8px;
-            font-weight: bold;
+            letter-spacing: 5px;
         }
 
-        input:focus { border-color: var(--primary); outline: none; }
-
-        button {
-            padding: 12px 20px;
+        button.main-btn {
+            background: var(--primary);
+            color: white;
             border: none;
+            padding: 12px 20px;
             border-radius: 10px;
-            cursor: pointer;
             font-weight: bold;
-            transition: all 0.2s;
+            cursor: pointer;
         }
 
-        .btn-guess { background: var(--primary); color: white; }
-        .btn-guess:hover { background: #357abd; }
-
-        .history-container {
-            max-height: 300px;
+        .history {
+            max-height: 250px;
             overflow-y: auto;
-            margin-top: 15px;
-            border-top: 2px solid #eee;
+            border-top: 1px solid #eee;
             padding-top: 10px;
         }
 
-        .history-item {
+        .log {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 8px 5px;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
         }
 
-        .tag-group { display: flex; gap: 4px; }
-        .tag {
-            padding: 3px 8px;
-            border-radius: 5px;
+        .badge {
+            padding: 2px 8px;
+            border-radius: 4px;
             font-size: 0.75rem;
             color: white;
-            font-weight: bold;
-        }
-        .tag-f { background: var(--success); }
-        .tag-p { background: var(--warning); color: #333; }
-        .tag-b { background: var(--grey); }
-
-        /* 彈窗設計 */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(3px);
-            z-index: 99;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            z-index: 100;
-            width: 80%;
-            max-width: 300px;
-            text-align: center;
+            margin-left: 3px;
         }
 
-        .footer-btns {
-            margin-top: 20px;
-            display: flex;
+        .b-f { background: var(--success); } /* Fermi */
+        .b-p { background: var(--warning); color: #333; } /* Pico */
+        .b-b { background: #95a5a6; } /* Bagels */
+
+        /* 隱藏彈窗 */
+        #win-overlay {
+            display: none;
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10;
+            flex-direction: column;
             justify-content: center;
-            gap: 15px;
+            align-items: center;
+            color: white;
         }
     </style>
 </head>
 <body>
 
-<div class="game-card">
-    <div class="lang-bar">
-        <button class="btn-link" onclick="setLang('zh')">中文</button> | 
-        <button class="btn-link" onclick="setLang('en')">EN</button>
+<div class="container">
+    <button class="lang-btn" onclick="toggleLang()">English / 中文</button>
+    <h1 id="t-title">數字偵探 PFB</h1>
+    <div class="counter"><span id="t-step">步數</span>: <span id="step-count">0</span></div>
+
+    <div class="rules" id="t-rules">
+        🎯 <b>Fermi</b>: 數字與位置皆對<br>
+        💡 <b>Pico</b>: 數字對但位置錯<br>
+        🥯 <b>Bagels</b>: 三個數字皆不對
     </div>
 
-    <h1 id="ui-title">數字偵探 PFB</h1>
-    <div class="stats"><span id="ui-attempts">步數</span>: <span id="count">0</span></div>
-
-    <div class="rules-box" id="ui-rules">
-        🎯 <b>Fermi</b>: 數字對、位置對<br>
-        💡 <b>Pico</b>: 數字對、位置錯<br>
-        🥯 <b>Bagels</b>: 全錯
+    <div class="input-group">
+        <input type="text" id="guess" maxlength="3" placeholder="???" autocomplete="off">
+        <button class="main-btn" onclick="checkGuess()" id="t-guess-btn">猜題</button>
     </div>
 
-    <div class="input-area">
-        <input type="text" id="guessInput" maxlength="3" placeholder="???" autocomplete="off">
-        <button class="btn-guess" onclick="makeGuess()" id="ui-btn-guess">猜題</button>
-    </div>
-
-    <div class="history-container" id="history">
-        </div>
-
-    <div class="footer-btns">
-        <button onclick="confirmReset()" style="background:#eee;" id="ui-btn-reset">重新開始</button>
-        <button onclick="giveUp()" style="background:none; color:var(--danger); border:1px solid var(--danger);" id="ui-btn-giveup">放棄</button>
-    </div>
+    <div class="history" id="history"></div>
+    
+    <button onclick="resetGame()" style="margin-top:20px; background:none; border:none; color:#999; cursor:pointer;" id="t-reset">重新開始</button>
 </div>
 
-<div class="modal-overlay" id="overlay"></div>
-<div class="modal" id="modal">
-    <h2 id="modal-title">太棒了！</h2>
-    <p id="modal-content"></p>
-    <button class="btn-guess" onclick="initGame()" style="width:100%">再挑戰一次</button>
+<div id="win-overlay">
+    <h2 id="t-win-title">太棒了！解碼成功！</h2>
+    <p id="t-win-msg">正確答案是：</p>
+    <h1 id="final-answer">---</h1>
+    <button class="main-btn" onclick="resetGame()">再玩一次</button>
 </div>
 
 <script>
     let secret = [];
-    let attempts = 0;
-    let currentLang = 'zh';
+    let steps = 0;
+    let lang = 'zh';
 
-    const langData = {
+    const uiText = {
         zh: {
-            title: "數字偵探 PFB",
-            attempts: "猜題次數",
-            rules: "🎯 <b>Fermi</b>: 數字對、位置對<br>💡 <b>Pico</b>: 數字對、位置錯<br>🥯 <b>Bagels</b>: 全錯",
-            btnGuess: "猜題",
-            btnReset: "重玩",
-            btnGiveUp: "看答案",
-            error: "請輸入 3 個不重複的數字！",
-            winTitle: "成功解碼！",
-            winMsg: "你一共花了 {n} 步。正確答案是：",
-            giveUpMsg: "別灰心，正確答案是：",
-            confirmReset: "確定要重新開始嗎？"
+            title: "數字偵探 PFB", step: "步數", btn: "猜題", reset: "重新開始",
+            rules: "🎯 <b>Fermi</b>: 數字與位置皆對<br>💡 <b>Pico</b>: 數字對但位置錯<br>🥯 <b>Bagels</b>: 三個數字皆不對",
+            err: "請輸入3個不重複的數字！", win: "太棒了！解碼成功！", msg: "正確答案是：", again: "再玩一次"
         },
         en: {
-            title: "PFB Detective",
-            attempts: "Guesses",
-            rules: "🎯 <b>Fermi</b>: Correct digit & spot<br>💡 <b>Pico</b>: Correct digit, wrong spot<br>🥯 <b>Bagels</b>: All wrong",
-            btnGuess: "Guess",
-            btnReset: "Reset",
-            btnGiveUp: "Reveal",
-            error: "Enter 3 unique digits!",
-            winTitle: "Mission Success!",
-            winMsg: "You solved it in {n} steps. The answer was: ",
-            giveUpMsg: "The secret code was: ",
-            confirmReset: "Are you sure to reset?"
+            title: "Number Detective", step: "Steps", btn: "Guess", reset: "Reset Game",
+            rules: "🎯 <b>Fermi</b>: Correct digit & spot<br>💡 <b>Pico</b>: Correct digit, wrong spot<br>🥯 <b>Bagels</b>: None are correct",
+            err: "Enter 3 unique digits!", win: "Mission Accomplished!", msg: "The code was: ", again: "Play Again"
         }
     };
 
-    function setLang(l) {
-        currentLang = l;
-        const d = langData[l];
-        document.getElementById('ui-title').innerText = d.title;
-        document.getElementById('ui-attempts').innerText = d.attempts;
-        document.getElementById('ui-rules').innerHTML = d.rules;
-        document.getElementById('ui-btn-guess').innerText = d.btnGuess;
-        document.getElementById('ui-btn-reset').innerText = d.btnReset;
-        document.getElementById('ui-btn-giveup').innerText = d.btnGiveUp;
+    function toggleLang() {
+        lang = lang === 'zh' ? 'en' : 'zh';
+        updateUI();
     }
 
-    function initGame() {
-        let digits = [0,1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-        secret = digits.slice(0, 3);
-        attempts = 0;
-        document.getElementById('count').innerText = "0";
+    function updateUI() {
+        document.getElementById('t-title').innerText = uiText[lang].title;
+        document.getElementById('t-step').innerText = uiText[lang].step;
+        document.getElementById('t-rules').innerHTML = uiText[lang].rules;
+        document.getElementById('t-guess-btn').innerText = uiText[lang].btn;
+        document.getElementById('t-reset').innerText = uiText[lang].reset;
+        document.getElementById('t-win-title').innerText = uiText[lang].win;
+        document.getElementById('t-win-msg').innerText = uiText[lang].msg;
+    }
+
+    function resetGame() {
+        let nums = [0,1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+        secret = nums.slice(0, 3);
+        steps = 0;
+        document.getElementById('step-count').innerText = "0";
         document.getElementById('history').innerHTML = "";
-        document.getElementById('guessInput').value = "";
-        document.getElementById('modal').style.display = "none";
-        document.getElementById('overlay').style.display = "none";
-        document.getElementById('guessInput').focus();
+        document.getElementById('guess').value = "";
+        document.getElementById('win-overlay').style.display = "none";
     }
 
-    function makeGuess() {
-        const val = document.getElementById('guessInput').value;
+    function checkGuess() {
+        let val = document.getElementById('guess').value;
         if (val.length !== 3 || new Set(val).size !== 3 || isNaN(val)) {
-            alert(langData[currentLang].error);
+            alert(uiText[lang].err);
             return;
         }
 
-        attempts++;
-        document.getElementById('count').innerText = attempts;
-        
-        const guess = val.split('').map(Number);
+        steps++;
+        document.getElementById('step-count').innerText = steps;
+        let guessArr = val.split('').map(Number);
         let f = 0, p = 0;
 
-        guess.forEach((num, i) => {
-            if (num === secret[i]) f++;
-            else if (secret.includes(num)) p++;
+        guessArr.forEach((n, i) => {
+            if (n === secret[i]) f++;
+            else if (secret.includes(n)) p++;
         });
 
-        updateHistory(val, f, p);
-        document.getElementById('guessInput').value = "";
-        document.getElementById('guessInput').focus();
+        showLog(val, f, p);
+        document.getElementById('guess').value = "";
 
-        if (f === 3) showEnd(langData[currentLang].winTitle, langData[currentLang].winMsg.replace('{n}', attempts));
-    }
-
-    function updateHistory(guess, f, p) {
-        const container = document.getElementById('history');
-        const div = document.createElement('div');
-        div.className = 'history-item';
-        
-        let tags = "";
-        if (f === 0 && p === 0) tags = '<span class="tag tag-b">Bagels</span>';
-        else {
-            for(let i=0; i<f; i++) tags += '<span class="tag tag-f">Fermi</span>';
-            for(let i=0; i<p; i++) tags += '<span class="tag tag-p">Pico</span>';
+        if (f === 3) {
+            document.getElementById('final-answer').innerText = secret.join('');
+            document.getElementById('win-overlay').style.display = "flex";
         }
-
-        div.innerHTML = `<strong>#${attempts} : ${guess}</strong> <div class="tag-group">${tags}</div>`;
-        container.prepend(div);
     }
 
-    function showEnd(title, msg) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-content').innerText = msg + secret.join('');
-        document.getElementById('modal').style.display = "block";
-        document.getElementById('overlay').style.display = "block";
+    function showLog(val, f, p) {
+        let hist = document.getElementById('history');
+        let div = document.createElement('div');
+        div.className = 'log';
+        let badges = "";
+        if (f === 0 && p === 0) badges = '<span class="badge b-b">Bagels</span>';
+        else {
+            for(let i=0; i<f; i++) badges += '<span class="badge b-f">Fermi</span>';
+            for(let i=0; i<p; i++) badges += '<span class="badge b-p">Pico</span>';
+        }
+        div.innerHTML = `<span>#${steps} - <b>${val}</b></span> <div>${badges}</div>`;
+        hist.prepend(div);
     }
 
-    function giveUp() {
-        showEnd("Game Over", langData[currentLang].giveUpMsg);
-    }
+    resetGame();
+    updateUI();
+</script>
 
-    function confirmReset() {
-        if(confirm(langData[currentLang].confirmReset)) initGame();
-    }
-
-    // Enter 鍵支援
-    document.getElementById('guessInput').addEventListener('keyup', (e) => {
-        if(e.key === 'Enter') makeGuess();
-    });
-
-    initGame();
-    setLang('zh');
+</body>
+</html>
 </script>
 
 </body>
