@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PFB 數字偵探 - 數學邏輯遊戲</title>
+    <title>PFB 數字解碼器 - 獨立輸入版</title>
     <style>
         :root {
-            --primary: #4a90e2;
-            --success: #2ecc71;
-            --warning: #f1c40f;
-            --danger: #e74c3c;
-            --bg: #f5f7fa;
+            --primary: #ffcc00; /* 活潑黃 */
+            --secondary: #4a90e2; /* 偵探藍 */
+            --success: #77dd77; /* 達成綠 */
+            --warning: #ffb347; /* 提示橙 */
+            --danger: #ff6961; /* 貝果紅 */
+            --bg: #fdfdfd;
         }
 
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg);
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #eef2f7;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,189 +24,252 @@
             margin: 0;
         }
 
-        .container {
+        .game-card {
             background: white;
             padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
+            border-radius: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 420px;
             text-align: center;
+            border: 4px solid var(--secondary);
         }
 
-        .lang-btn {
-            background: none;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-bottom: 15px;
-        }
+        .lang-switch { text-align: right; margin-bottom: 10px; }
+        .btn-s { background: none; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-size: 0.7rem; color: #999; }
 
-        h1 { color: var(--primary); margin-bottom: 10px; }
-        .counter { font-size: 1.1rem; font-weight: bold; color: #666; margin-bottom: 20px; }
-
+        h1 { color: var(--secondary); margin: 0 0 10px 0; font-size: 1.8rem; }
+        
         .rules {
-            background: #fdfdfd;
-            border: 1px solid #eee;
+            background: #f0f7ff;
             padding: 10px;
-            border-radius: 10px;
+            border-radius: 15px;
             font-size: 0.85rem;
             text-align: left;
             margin-bottom: 20px;
+            border: 2px dashed var(--secondary);
+            line-height: 1.6;
         }
 
-        .input-group {
+        /* 獨立輸入框樣式 */
+        .digit-container {
             display: flex;
-            gap: 10px;
+            gap: 15px;
+            justify-content: center;
             margin-bottom: 20px;
         }
 
-        input {
-            flex: 1;
-            padding: 12px;
-            font-size: 1.5rem;
-            border: 2px solid #ddd;
-            border-radius: 10px;
+        .digit-input {
+            width: 60px;
+            height: 70px;
+            font-size: 2.5rem;
             text-align: center;
-            letter-spacing: 5px;
-        }
-
-        button.main-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 10px;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            background: #fafafa;
             font-weight: bold;
-            cursor: pointer;
+            color: var(--secondary);
+            transition: all 0.2s;
         }
 
-        .history {
+        .digit-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: var(--primary);
+            color: #444;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #d4aa00;
+            margin-bottom: 20px;
+        }
+
+        .btn-main:active { transform: translateY(3px); box-shadow: 0 2px 0 #d4aa00; }
+
+        .history-box {
             max-height: 250px;
             overflow-y: auto;
-            border-top: 1px solid #eee;
+            text-align: left;
+            border-top: 2px solid #f0f0f0;
             padding-top: 10px;
         }
 
-        .log {
+        .history-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed #eee;
+            align-items: center;
+            padding: 10px 5px;
+            border-bottom: 1px solid #f9f9f9;
         }
 
+        .guess-num { font-size: 1.2rem; font-weight: bold; letter-spacing: 3px; }
+
+        .badge-group { display: flex; gap: 5px; }
         .badge {
-            padding: 2px 8px;
-            border-radius: 4px;
+            padding: 3px 8px;
+            border-radius: 8px;
             font-size: 0.75rem;
+            font-weight: bold;
             color: white;
-            margin-left: 3px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
         }
+        .b-f { background: var(--success); }
+        .b-p { background: var(--warning); color: #333; }
+        .b-b { background: #95a5a6; }
 
-        .b-f { background: var(--success); } /* Fermi */
-        .b-p { background: var(--warning); color: #333; } /* Pico */
-        .b-b { background: #95a5a6; } /* Bagels */
-
-        /* 隱藏彈窗 */
-        #win-overlay {
+        /* 彈窗 */
+        .modal-bg {
             display: none;
             position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 10;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            z-index: 99;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            z-index: 100;
+            width: 250px;
+            border: 5px solid var(--success);
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <button class="lang-btn" onclick="toggleLang()">English / 中文</button>
-    <h1 id="t-title">數字偵探 PFB</h1>
-    <div class="counter"><span id="t-step">步數</span>: <span id="step-count">0</span></div>
-
-    <div class="rules" id="t-rules">
-        🎯 <b>Fermi</b>: 數字與位置皆對<br>
-        💡 <b>Pico</b>: 數字對但位置錯<br>
-        🥯 <b>Bagels</b>: 三個數字皆不對
+<div class="game-card">
+    <div class="lang-switch">
+        <button class="btn-s" onclick="setLang('zh')">中文</button>
+        <button class="btn-s" onclick="setLang('en')">EN</button>
     </div>
 
-    <div class="input-group">
-        <input type="text" id="guess" maxlength="3" placeholder="???" autocomplete="off">
-        <button class="main-btn" onclick="checkGuess()" id="t-guess-btn">猜題</button>
-    </div>
-
-    <div class="history" id="history"></div>
+    <h1 id="t-title">數字解碼器</h1>
     
-    <button onclick="resetGame()" style="margin-top:20px; background:none; border:none; color:#999; cursor:pointer;" id="t-reset">重新開始</button>
+    <div class="rules" id="t-rules">
+        🎯 <b>Fermi</b>: 數字對、位置對<br>
+        💡 <b>Pico</b>: 數字對、位置錯<br>
+        🥯 <b>Bagels</b>: 三個都不對
+    </div>
+
+    <div class="digit-container">
+        <input type="text" class="digit-input" id="d1" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input type="text" class="digit-input" id="d2" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input type="text" class="digit-input" id="d3" maxlength="1" inputmode="numeric" autocomplete="off">
+    </div>
+
+    <button class="btn-main" onclick="processGuess()" id="t-btn">開始解碼！</button>
+
+    <div class="history-box" id="history">
+        </div>
+
+    <button class="btn-s" onclick="initGame()" style="margin-top:20px;" id="t-reset">重新開始</button>
 </div>
 
-<div id="win-overlay">
-    <h2 id="t-win-title">太棒了！解碼成功！</h2>
-    <p id="t-win-msg">正確答案是：</p>
-    <h1 id="final-answer">---</h1>
-    <button class="main-btn" onclick="resetGame()">再玩一次</button>
+<div class="modal-bg" id="bg"></div>
+<div class="modal" id="winModal">
+    <h2 style="color:var(--success)" id="t-win">解碼成功！</h2>
+    <p id="t-msg">正確答案是：</p>
+    <h1 id="ans-display" style="letter-spacing:10px; color:var(--secondary)">---</h1>
+    <button class="btn-main" onclick="initGame()">再玩一次</button>
 </div>
 
 <script>
     let secret = [];
-    let steps = 0;
+    let attempts = 0;
     let lang = 'zh';
 
     const uiText = {
         zh: {
-            title: "數字偵探 PFB", step: "步數", btn: "猜題", reset: "重新開始",
-            rules: "🎯 <b>Fermi</b>: 數字與位置皆對<br>💡 <b>Pico</b>: 數字對但位置錯<br>🥯 <b>Bagels</b>: 三個數字皆不對",
-            err: "請輸入3個不重複的數字！", win: "太棒了！解碼成功！", msg: "正確答案是：", again: "再玩一次"
+            title: "數字解碼器 PFB",
+            rules: "🎯 <b>Fermi</b>: 數字對、位置對<br>💡 <b>Pico</b>: 數字對、位置錯<br>🥯 <b>Bagels</b>: 三個都不對",
+            btn: "開始解碼！",
+            reset: "重新挑戰",
+            err: "請輸入3個不重複的數字！",
+            win: "解碼成功！",
+            msg: "正確答案就是：",
+            history: "推理日誌"
         },
         en: {
-            title: "Number Detective", step: "Steps", btn: "Guess", reset: "Reset Game",
-            rules: "🎯 <b>Fermi</b>: Correct digit & spot<br>💡 <b>Pico</b>: Correct digit, wrong spot<br>🥯 <b>Bagels</b>: None are correct",
-            err: "Enter 3 unique digits!", win: "Mission Accomplished!", msg: "The code was: ", again: "Play Again"
+            title: "Code Breaker PFB",
+            rules: "🎯 <b>Fermi</b>: Correct digit & spot<br>💡 <b>Pico</b>: Correct digit, wrong spot<br>🥯 <b>Bagels</b>: All wrong",
+            btn: "Decode!",
+            reset: "Reset Game",
+            err: "Enter 3 unique digits!",
+            win: "Success!",
+            msg: "The code was: ",
+            history: "Logic Log"
         }
     };
 
-    function toggleLang() {
-        lang = lang === 'zh' ? 'en' : 'zh';
-        updateUI();
-    }
-
-    function updateUI() {
+    function setLang(l) {
+        lang = l;
         document.getElementById('t-title').innerText = uiText[lang].title;
-        document.getElementById('t-step').innerText = uiText[lang].step;
         document.getElementById('t-rules').innerHTML = uiText[lang].rules;
-        document.getElementById('t-guess-btn').innerText = uiText[lang].btn;
+        document.getElementById('t-btn').innerText = uiText[lang].btn;
         document.getElementById('t-reset').innerText = uiText[lang].reset;
-        document.getElementById('t-win-title').innerText = uiText[lang].win;
-        document.getElementById('t-win-msg').innerText = uiText[lang].msg;
+        document.getElementById('t-win').innerText = uiText[lang].win;
+        document.getElementById('t-msg').innerText = uiText[lang].msg;
     }
 
-    function resetGame() {
+    // 自動跳格邏輯
+    const inputs = [document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
+    
+    inputs.forEach((input, index) => {
+        // 輸入數字後跳下一格
+        input.addEventListener('input', (e) => {
+            if (e.target.value.length === 1 && index < 2) {
+                inputs[index + 1].focus();
+            }
+        });
+
+        // 處理退格鍵回跳
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                inputs[index - 1].focus();
+            }
+            if (e.key === 'Enter') processGuess();
+        });
+    });
+
+    function initGame() {
         let nums = [0,1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
         secret = nums.slice(0, 3);
-        steps = 0;
-        document.getElementById('step-count').innerText = "0";
+        attempts = 0;
         document.getElementById('history').innerHTML = "";
-        document.getElementById('guess').value = "";
-        document.getElementById('win-overlay').style.display = "none";
+        inputs.forEach(i => i.value = "");
+        document.getElementById('winModal').style.display = "none";
+        document.getElementById('bg').style.display = "none";
+        inputs[0].focus();
     }
 
-    function checkGuess() {
-        let val = document.getElementById('guess').value;
-        if (val.length !== 3 || new Set(val).size !== 3 || isNaN(val)) {
+    function processGuess() {
+        const val = inputs.map(i => i.value).join('');
+        
+        // 檢查：必須滿3位、必須是數字、不能重複
+        if (val.length !== 3 || isNaN(val) || new Set(val).size !== 3) {
             alert(uiText[lang].err);
             return;
         }
 
-        steps++;
-        document.getElementById('step-count').innerText = steps;
-        let guessArr = val.split('').map(Number);
+        attempts++;
+        const guessArr = val.split('').map(Number);
         let f = 0, p = 0;
 
         guessArr.forEach((n, i) => {
@@ -213,35 +277,38 @@
             else if (secret.includes(n)) p++;
         });
 
-        showLog(val, f, p);
-        document.getElementById('guess').value = "";
+        addLog(val, f, p);
+        inputs.forEach(i => i.value = "");
+        inputs[0].focus();
 
-        if (f === 3) {
-            document.getElementById('final-answer').innerText = secret.join('');
-            document.getElementById('win-overlay').style.display = "flex";
-        }
+        if (f === 3) showWin();
     }
 
-    function showLog(val, f, p) {
-        let hist = document.getElementById('history');
-        let div = document.createElement('div');
-        div.className = 'log';
+    function addLog(val, f, p) {
+        const hist = document.getElementById('history');
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        
         let badges = "";
-        if (f === 0 && p === 0) badges = '<span class="badge b-b">Bagels</span>';
-        else {
-            for(let i=0; i<f; i++) badges += '<span class="badge b-f">Fermi</span>';
-            for(let i=0; i<p; i++) badges += '<span class="badge b-p">Pico</span>';
+        if (f === 0 && p === 0) {
+            badges = '<span class="badge b-b">🥯 Bagels</span>';
+        } else {
+            for(let i=0; i<f; i++) badges += '<span class="badge b-f">🎯 Fermi</span>';
+            for(let i=0; i<p; i++) badges += '<span class="badge b-p">💡 Pico</span>';
         }
-        div.innerHTML = `<span>#${steps} - <b>${val}</b></span> <div>${badges}</div>`;
-        hist.prepend(div);
+
+        item.innerHTML = `<span class="guess-num">${val}</span> <div class="badge-group">${badges}</div>`;
+        hist.prepend(item);
     }
 
-    resetGame();
-    updateUI();
-</script>
+    function showWin() {
+        document.getElementById('ans-display').innerText = secret.join('');
+        document.getElementById('winModal').style.display = "block";
+        document.getElementById('bg').style.display = "block";
+    }
 
-</body>
-</html>
+    initGame();
+    setLang('zh');
 </script>
 
 </body>
